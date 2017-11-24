@@ -97,7 +97,7 @@ Vagrant.configure('2') do |config|
     config.vm.provision :shell, inline: '''
         set -x
         uname -a
-        route
+        route -n
         #ip route
         #ip route get 8.8.8.8
         cat /proc/cmdline
