@@ -37,14 +37,14 @@ apt-get install -y --no-install-recommends squashfs-tools
 apt-get install -y xz-utils
 
 mkdir /srv/tftp/tcl && pushd /srv/tftp/tcl
-TCL_REPOSITORY=http://tinycorelinux.net/7.x/x86_64
+TCL_REPOSITORY=http://tinycorelinux.net/8.x/x86_64
 # corepure64.gz contains all the files on rootfs64 and modules64 merged together in a single smaller file.
 #wget -q $TCL_REPOSITORY/release/distribution_files/{vmlinuz64,corepure64.gz,rootfs64.gz,modules64.gz}
 wget -q $TCL_REPOSITORY/release/distribution_files/{vmlinuz64,corepure64.gz}
 #zcat corepure64.gz | cpio -vt # list
 #zcat corepure64.gz | (mkdir corepure64 && cd corepure64 && sudo cpio -idv --no-absolute-filenames) # extract
 # create an extra initrd image that leaves the guest in a state that can be used by vagrant.
-# TODO also load .dep files and get all the dependencies. e.g. http://tinycorelinux.net/7.x/x86_64/tcz/openssh.tcz.dep
+# TODO also load .dep files and get all the dependencies. e.g. http://tinycorelinux.net/8.x/x86_64/tcz/openssh.tcz.dep
 #      NB when it returns 404 there are no dependencies.
 mkdir -p provision/opt
 TCE='openssh openssl'
