@@ -16,10 +16,12 @@ Vagrant.configure('2') do |config|
   config.vm.define :ubuntu do |config|
     config.vm.box = 'empty'
     config.vm.network :private_network, mac: '080027000001', ip: '10.10.10.0', auto_config: false
-    config.vm.provider :virtualbox do |vb|
-      # let vagrant known that the guest does not have the guest additions nor a functional vboxsf.
+    config.vm.provider :virtualbox do |vb, config|
+      # let vagrant known that the guest does not have the guest additions nor a functional vboxsf or shared folders.
       vb.check_guest_additions = false
       vb.functional_vboxsf = false
+      config.vm.synced_folder '.', '/vagrant', disabled: true
+
       # configure for PXE boot.
       vb.customize ['modifyvm', :id, '--boot1', 'net']
       vb.customize ['modifyvm', :id, '--boot2', 'disk']
@@ -37,11 +39,12 @@ Vagrant.configure('2') do |config|
     config.vm.network :private_network, mac: '080027000002', ip: '10.10.10.0', auto_config: false
     config.ssh.insert_key = false
     config.ssh.shell = '/bin/sh' # TCL uses BusyBox ash instead of bash.
-    config.vm.provider :virtualbox do |vb|
-      # let vagrant known that the guest does not have the guest additions nor a functional vboxsf.
+    config.vm.provider :virtualbox do |vb, config|
+      # let vagrant known that the guest does not have the guest additions nor a functional vboxsf or shared folders.
       vb.check_guest_additions = false
       vb.functional_vboxsf = false
-
+      config.vm.synced_folder '.', '/vagrant', disabled: true
+      
       # configure for PXE boot.
       vb.customize ['modifyvm', :id, '--boot1', 'net']
       vb.customize ['modifyvm', :id, '--boot2', 'disk']
