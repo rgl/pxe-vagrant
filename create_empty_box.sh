@@ -12,8 +12,8 @@ TEMPLATE_BOX=~/.vagrant.d/boxes/ubuntu-16.04-amd64/0/virtualbox
 echo '{"provider":"virtualbox"}' >metadata.json
 VBoxManage createhd --filename empty.vmdk --format VMDK --size 10000
 sed -r \
-    -e 's,packer-amd64-virtualbox-.+?.vmdk,empty.vmdk,' \
-    -e 's,([">]packer-amd64-virtualbox-)[^"<]+?,\1empty,' \
+    -e 's,packer-.+-virtualbox-.+?.vmdk,empty.vmdk,' \
+    -e 's,([">]packer-.+-virtualbox-)[^"<]+?,\1empty,' \
     $TEMPLATE_BOX/box.ovf \
     >box.ovf
 cp $TEMPLATE_BOX/Vagrantfile .
