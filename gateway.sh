@@ -9,6 +9,26 @@ apt-get upgrade -y
 
 
 #
+# install tcpdump for being able to capture network traffic.
+
+apt-get install -y tcpdump
+
+
+#
+# install vim.
+
+apt-get install -y --no-install-recommends vim
+cat >/etc/vim/vimrc.local <<'EOF'
+syntax on
+set background=dark
+set esckeys
+set ruler
+set laststatus=2
+set nobackup
+EOF
+
+
+#
 # provision the TFTP server.
 # see https://help.ubuntu.com/community/Installation/QuickNetboot
 # see https://help.ubuntu.com/community/PXEInstallServer
@@ -20,13 +40,40 @@ sed -i -E 's,(USE_INETD=).+,\1false,' /etc/default/atftpd
 systemctl restart atftpd
 
 
-# 
-# get Ubuntu Linux (the PXE bootable version).
+#
+# get pxelinux.
+# see http://www.syslinux.org/wiki/index.php?title=PXELINUX
+# see http://www.syslinux.org/wiki/index.php?title=Config
 
-mkdir /srv/tftp/ubuntu
-wget -qO- http://archive.ubuntu.com/ubuntu/dists/xenial-updates/main/installer-amd64/current/images/netboot/netboot.tar.gz \
-  | tar xzv -C /srv/tftp/ubuntu
-# test with: atftp --get --local-file pxelinux.0 --remote-file ubuntu/pxelinux.0 127.0.0.1
+apt-get install -y xz-utils
+SYSLINUX=syslinux-6.03
+wget -q -P $HOME https://www.kernel.org/pub/linux/utils/boot/syslinux/$SYSLINUX.tar.xz
+tar xf $HOME/$SYSLINUX.tar.xz -C $HOME
+
+
+#
+# get Debian Live (assumed to be built from https://github.com/rgl/debian-live-builder-vagrant).
+
+if [ -f /vagrant/tmp/live-image-amd64.hybrid.iso ]; then
+mkdir -p /srv/tftp/debian-live/pxelinux.cfg
+pushd /srv/tftp/debian-live
+# configure pxelinux to boot debian-live.
+cp $HOME/$SYSLINUX/bios/com32/elflink/ldlinux/ldlinux.c32 .
+cp $HOME/$SYSLINUX/bios/core/lpxelinux.0 .
+cat >pxelinux.cfg/default <<'EOF'
+default linux
+label linux
+kernel vmlinuz
+initrd initrd.img
+append net.ifnames=0 boot=live components username=vagrant fetch=http://10.10.10.2/debian-live/filesystem.squashfs
+EOF
+apt-get install -y --no-install-recommends p7zip-full
+7z x -otmp /vagrant/tmp/live-image-amd64.hybrid.iso live/{vmlinuz,initrd.img,filesystem.squashfs}
+mv tmp/live/* .
+rm -rf tmp
+popd
+# test with: atftp --get --local-file lpxelinux.0 --remote-file debian-live/lpxelinux.0 127.0.0.1
+fi
 
 
 #
@@ -34,7 +81,6 @@ wget -qO- http://archive.ubuntu.com/ubuntu/dists/xenial-updates/main/installer-a
 
 apt-get install -y --no-install-recommends advancecomp
 apt-get install -y --no-install-recommends squashfs-tools
-apt-get install -y xz-utils
 
 mkdir /srv/tftp/tcl && pushd /srv/tftp/tcl
 TCL_REPOSITORY=http://tinycorelinux.net/8.x/x86_64
@@ -74,12 +120,7 @@ sudo chown -R 0:0 provision # NB uig:gid in your host are probably not the same 
 advdef -z4 provision.gz
 rm -rf provision *.tcz
 #zcat provision.gz | cpio --list --numeric-uid-gid --verbose
-# get and configure pxelinux to boot tcl.
-# see http://www.syslinux.org/wiki/index.php?title=PXELINUX
-# see http://www.syslinux.org/wiki/index.php?title=Config
-SYSLINUX=syslinux-6.03
-wget -q -P $HOME https://www.kernel.org/pub/linux/utils/boot/syslinux/$SYSLINUX.tar.xz
-tar xf $HOME/$SYSLINUX.tar.xz -C $HOME
+# configure pxelinux to boot tcl.
 mkdir pxelinux.cfg
 cp $HOME/$SYSLINUX/bios/com32/elflink/ldlinux/ldlinux.c32 .
 cp $HOME/$SYSLINUX/bios/core/lpxelinux.0 .
@@ -138,9 +179,10 @@ subnet 10.10.10.0 netmask 255.255.255.0 {
 # NB we reuse the VirtualBox MAC 08:00:27 (Cadmus Computer Systems) vendor.
 #    see https://www.wireshark.org/tools/oui-lookup.html
 
-host ubuntu {
+host debian-live {
   hardware ethernet 08:00:27:00:00:01;
-  filename "ubuntu/pxelinux.0";
+  option pxelinux.pathprefix "http://10.10.10.2/debian-live/";
+  filename "debian-live/lpxelinux.0";
 }
 
 host tcl {

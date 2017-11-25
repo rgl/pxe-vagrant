@@ -4,12 +4,12 @@
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>190</x>
+      <x>170</x>
       <y>180</y>
-      <w>120</w>
+      <w>140</w>
       <h>30</h>
     </coordinates>
-    <panel_attributes>ubuntu linux</panel_attributes>
+    <panel_attributes>debian live linux</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
@@ -39,9 +39,9 @@ m1=eth1</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>190</x>
+      <x>170</x>
       <y>250</y>
-      <w>120</w>
+      <w>140</w>
       <h>30</h>
     </coordinates>
     <panel_attributes>tiny core linux</panel_attributes>
