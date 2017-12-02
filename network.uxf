@@ -16,7 +16,7 @@
     <id>UMLClass</id>
     <coordinates>
       <x>740</x>
-      <y>200</y>
+      <y>230</y>
       <w>120</w>
       <h>60</h>
     </coordinates>
@@ -44,7 +44,7 @@ m1=eth1</panel_attributes>
       <w>140</w>
       <h>30</h>
     </coordinates>
-    <panel_attributes>tiny core linux</panel_attributes>
+    <panel_attributes>linuxkit</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
@@ -53,7 +53,7 @@ m1=eth1</panel_attributes>
       <x>510</x>
       <y>180</y>
       <w>110</w>
-      <h>100</h>
+      <h>160</h>
     </coordinates>
     <panel_attributes>network
 10.10.10/24
@@ -78,7 +78,7 @@ m1=eth1</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>610</x>
-      <y>210</y>
+      <y>240</y>
       <w>150</w>
       <h>50</h>
     </coordinates>
@@ -91,7 +91,7 @@ m1=eth1</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>850</x>
-      <y>220</y>
+      <y>250</y>
       <w>140</w>
       <h>40</h>
     </coordinates>
@@ -103,7 +103,7 @@ m1=eth0</panel_attributes>
     <id>UMLNote</id>
     <coordinates>
       <x>770</x>
-      <y>90</y>
+      <y>120</y>
       <w>60</w>
       <h>80</h>
     </coordinates>
@@ -118,7 +118,7 @@ bg=blue</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>790</x>
-      <y>160</y>
+      <y>190</y>
       <w>30</w>
       <h>60</h>
     </coordinates>
@@ -129,12 +129,36 @@ bg=blue</panel_attributes>
     <id>UMLUseCase</id>
     <coordinates>
       <x>970</x>
-      <y>210</y>
+      <y>240</y>
       <w>120</w>
       <h>40</h>
     </coordinates>
     <panel_attributes>internet
 lt=.</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>300</x>
+      <y>310</y>
+      <w>230</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>lt=-
+r1=08:00:27:00:00:03
+m1=eth1</panel_attributes>
+    <additional_attributes>10.0;20.0;210.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>170</x>
+      <y>320</y>
+      <w>140</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>tiny core linux</panel_attributes>
     <additional_attributes/>
   </element>
 </diagram>

@@ -10,6 +10,8 @@ Run `vagrant up gateway` to launch the gateway.
 
 Run `vagrant up debian_live` to launch the `debian_live` (Debian Live) PXE client. This assumes you have `../debian-live-builder-vagrant/live-image-amd64.hybrid.iso` built as described at the [rgl/debian-live-builder-vagrant](https://github.com/rgl/debian-live-builder-vagrant) repository.
 
+Run `vagrant up linuxkit` to launch the `linuxkit` (LinuxKit) PXE client. This assumes you have `../linuxkit-vagrant/shared/sshd-kernel` (and `sshd-initrd.img`) built as described at the [rgl/linuxkit-vagrant](https://github.com/rgl/linuxkit-vagrant) repository.
+
 Run `vagrant up tcl` to launch the `tcl` (Tiny Core Linux) PXE client.
 
 # PXE boot

@@ -77,6 +77,28 @@ fi
 
 
 #
+# get LinuxKit (assumed to be built from https://github.com/rgl/linuxkit-vagrant).
+
+if [ -f /vagrant/tmp/sshd-kernel ]; then
+mkdir -p /srv/tftp/linuxkit/pxelinux.cfg
+pushd /srv/tftp/linuxkit
+cp $HOME/$SYSLINUX/bios/com32/elflink/ldlinux/ldlinux.c32 .
+cp $HOME/$SYSLINUX/bios/core/lpxelinux.0 .
+cat >pxelinux.cfg/default <<'EOF'
+default linux
+label linux
+kernel vmlinuz
+initrd initrd.img
+append console=tty0
+EOF
+cp /vagrant/tmp/sshd-kernel vmlinuz
+cp /vagrant/tmp/sshd-initrd.img initrd.img
+popd
+# test with: atftp --get --local-file lpxelinux.0 --remote-file linuxkit/lpxelinux.0 127.0.0.1
+fi
+
+
+#
 # get Tiny Core Linux.
 
 apt-get install -y --no-install-recommends advancecomp
@@ -185,8 +207,14 @@ host debian-live {
   filename "debian-live/lpxelinux.0";
 }
 
-host tcl {
+host linuxkit {
   hardware ethernet 08:00:27:00:00:02;
+  option pxelinux.pathprefix "http://10.10.10.2/linuxkit/";
+  filename "linuxkit/lpxelinux.0";
+}
+
+host tcl {
+  hardware ethernet 08:00:27:00:00:03;
   option pxelinux.pathprefix "http://10.10.10.2/tcl/";
   filename "tcl/lpxelinux.0";
 }

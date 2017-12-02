@@ -14,12 +14,17 @@ Vagrant.configure('2') do |config|
     config.vm.network :private_network, ip: '10.10.10.2'
     config.vm.provision :shell, path: 'gateway.sh'
     config.trigger.before :up do
-      source = '../debian-live-builder-vagrant/live-image-amd64.hybrid.iso'
-      destination = "tmp/#{File.basename(source)}"
-      if File.exist?(source) && !File.exist?(destination)
-        info "Copying #{source} to #{destination}..."
-        FileUtils.mkdir_p('tmp')
-        FileUtils.cp(source, destination)
+      [
+        '../debian-live-builder-vagrant/live-image-amd64.hybrid.iso',
+        '../linuxkit-vagrant/shared/sshd-kernel',
+        '../linuxkit-vagrant/shared/sshd-initrd.img',
+      ].each do |source|
+        destination = "tmp/#{File.basename(source)}"
+        if File.exist?(source) && (!File.exist?(destination) || File.mtime(source) > File.mtime(destination))
+          info "Copying #{source} to #{destination}..."
+          FileUtils.mkdir_p('tmp')
+          FileUtils.cp(source, destination)
+        end
       end
     end
   end
@@ -103,9 +108,67 @@ Vagrant.configure('2') do |config|
       '''
   end
 
+  config.vm.define :linuxkit do |config|
+    config.vm.box = 'empty'
+    config.ssh.username = 'root'
+    config.ssh.shell = '/bin/sh'
+    config.vm.network :private_network, mac: '080027000002', ip: '10.10.10.0', auto_config: false
+    config.vm.provider :virtualbox do |vb, config|
+      # make sure this vm has enough memory to load the root fs into memory.
+      vb.memory = 2048
+
+      # let vagrant known that the guest does not have the guest additions nor a functional vboxsf or shared folders.
+      vb.check_guest_additions = false
+      vb.functional_vboxsf = false
+      config.vm.synced_folder '.', '/vagrant', disabled: true
+
+      # configure for PXE boot.
+      vb.customize ['modifyvm', :id, '--boot1', 'net']
+      vb.customize ['modifyvm', :id, '--boot2', 'disk']
+      vb.customize ['modifyvm', :id, '--biospxedebug', 'on']
+      vb.customize ['modifyvm', :id, '--cableconnected2', 'on']
+      vb.customize ['modifyvm', :id, '--nicbootprio2', '1']
+      vb.customize ['modifyvm', :id, "--nictype2", '82540EM'] # Must be an Intel card (as-of VB 5.1 we cannot Intel PXE boot from a virtio-net card).
+
+      # set some BIOS settings that will help us identify this particular machine.
+      #
+      #   VirtualBox          | Linux
+      #   --------------------+----------------------------------------------
+      #   DmiSystemVendor     | /sys/devices/virtual/dmi/id/sys_vendor
+      #   DmiSystemProduct    | /sys/devices/virtual/dmi/id/product_name
+      #   DmiSystemVersion    | /sys/devices/virtual/dmi/id/product_version
+      #   DmiSystemSerial     | /sys/devices/virtual/dmi/id/product_serial
+      #   DmiSystemSKU        | TODO where do we read this from?
+      #   DmiSystemUuid       | /sys/devices/virtual/dmi/id/product_uuid
+      #   DmiChassisVendor    | /sys/devices/virtual/dmi/id/chassis_asset_tag
+      #   DmiChassisType      | /sys/devices/virtual/dmi/id/chassis_type
+      #   DmiChassisVersion   ! /sys/devices/virtual/dmi/id/chassis_version
+      #   DmiChassisSerial    ! /sys/devices/virtual/dmi/id/chassis_serial
+      #   DmiChassisAssetTag  | /sys/devices/virtual/dmi/id/chassis_asset_tag
+      #
+      # See https://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/PC/DevPcBios.cpp
+      # See https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Devices/PC/BIOS
+      # See https://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/PC/BIOS/bios.c
+      #
+      # NB the VirtualBox BIOS is based on Plex86/Boch/QEMU.
+      # NB dump extradata with VBoxManage getextradata $(cat .vagrant/machines/debianlive/virtualbox/id)
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiSystemVendor',    'your vendor name here']
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiSystemProduct',   'your product name here']
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiSystemVersion',   'your product version here']
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiSystemSerial',    'your product serial number here']
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiSystemSKU',       'your product SKU here']
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiSystemUuid',      '00000000-0000-4000-8000-000000000002']
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiChassisVendor',   'your chassis vendor name here']
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiChassisType',     '1']
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiChassisVersion',  'your chassis version here']
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiChassisSerial',   'your chassis serial number here']
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiChassisAssetTag', 'your chassis asset tag here']
+    end
+  end
+
   config.vm.define :tcl do |config|
     config.vm.box = 'empty'
-    config.vm.network :private_network, mac: '080027000002', ip: '10.10.10.0', auto_config: false
+    config.vm.network :private_network, mac: '080027000003', ip: '10.10.10.0', auto_config: false
     config.ssh.insert_key = false
     config.ssh.shell = '/bin/sh' # TCL uses BusyBox ash instead of bash.
     config.vm.provider :virtualbox do |vb, config|
@@ -149,7 +212,7 @@ Vagrant.configure('2') do |config|
       vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiSystemVersion',   'your product version here']
       vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiSystemSerial',    'your product serial number here']
       vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiSystemSKU',       'your product SKU here']
-      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiSystemUuid',      '00000000-0000-4000-8000-000000000002']
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiSystemUuid',      '00000000-0000-4000-8000-000000000003']
       vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiChassisVendor',   'your chassis vendor name here']
       vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiChassisType',     '1']
       vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiChassisVersion',  'your chassis version here']
