@@ -14,6 +14,8 @@ Run `vagrant up linuxkit` to launch the `linuxkit` (LinuxKit) PXE client. This a
 
 Run `vagrant up tcl` to launch the `tcl` (Tiny Core Linux) PXE client.
 
+Run `vagrant up winpe` to launch the `winpe` (Windows PE) PXE client. This assumes you have `../windows-pe-vagrant/tmp/winpe-amd64.iso` built as described at the [rgl/windows-pe-vagrant](https://github.com/rgl/windows-pe-vagrant) repository. Note that vagrant wont be able to connect to it; the ideia is just to see it PXE boot.
+
 # PXE boot
 
 This is roughly how Debian Live Linux is booted on a PXE PC:

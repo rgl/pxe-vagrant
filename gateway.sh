@@ -52,6 +52,21 @@ tar xf $HOME/$SYSLINUX.tar.xz -C $HOME
 
 
 #
+# get wimboot.
+# see http://ipxe.org/wimboot
+
+WIMBOOT=wimboot-2.6.0-signed
+WIMBOOT_URL=http://git.ipxe.org/releases/wimboot/$WIMBOOT.tar.bz2
+WIMBOOT_SHA=f4f9304da9193cbe4584b47c65e0eaf0cc2af0d2052d1e47e8a089445b7ac1c3
+wget -q -P $HOME $WIMBOOT_URL
+if [ "$(sha256sum $HOME/$WIMBOOT.tar.bz2 | awk '{print $1}')" != "$WIMBOOT_SHA" ]; then
+    echo "downloaded $WIMBOOT_URL failed the checksum verification"
+    exit 1
+fi
+tar xf $HOME/$WIMBOOT.tar.bz2 -C $HOME
+
+
+#
 # get Debian Live (assumed to be built from https://github.com/rgl/debian-live-builder-vagrant).
 
 if [ -f /vagrant/tmp/live-image-amd64.hybrid.iso ]; then
@@ -157,6 +172,33 @@ popd
 
 
 #
+# get winpe (assumed to be built from https://github.com/rgl/windows-pe-vagrant).
+# see http://ipxe.org/wimboot
+# see http://ipxe.org/howto/winpe
+# see http://www.syslinux.org/wiki/index.php?title=Linux.c32
+
+if [ -f /vagrant/tmp/winpe-amd64.iso ]; then
+mkdir -p /srv/tftp/winpe/pxelinux.cfg
+pushd /srv/tftp/winpe
+cp $HOME/$SYSLINUX/bios/com32/elflink/ldlinux/ldlinux.c32 .
+cp $HOME/$SYSLINUX/bios/com32/modules/linux.c32 .
+cp $HOME/$SYSLINUX/bios/com32/lib/libcom32.c32 .
+cp $HOME/$SYSLINUX/bios/core/lpxelinux.0 .
+cp $HOME/$WIMBOOT/wimboot .
+7z x -otmp /vagrant/tmp/winpe-amd64.iso bootmgr Boot/{BCD,boot.sdi} sources/boot.wim
+find tmp -type f -exec mv {} $PWD \;
+rm -rf tmp
+cat >pxelinux.cfg/default <<'EOF'
+default winpe
+label winpe
+com32 linux.c32
+append wimboot initrdfile=bootmgr,BCD,boot.sdi,boot.wim
+EOF
+popd
+fi
+
+
+#
 # provision the HTTP server.
 
 apt-get install -y --no-install-recommends nginx
@@ -217,6 +259,12 @@ host tcl {
   hardware ethernet 08:00:27:00:00:03;
   option pxelinux.pathprefix "http://10.10.10.2/tcl/";
   filename "tcl/lpxelinux.0";
+}
+
+host winpe {
+  hardware ethernet 08:00:27:00:00:04;
+  option pxelinux.pathprefix "http://10.10.10.2/winpe/";
+  filename "winpe/lpxelinux.0";
 }
 EOF
 sed -i -E 's,^(INTERFACES=).*,\1eth1,' /etc/default/isc-dhcp-server
