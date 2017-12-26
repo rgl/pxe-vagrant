@@ -266,8 +266,36 @@ host winpe {
   option pxelinux.pathprefix "http://10.10.10.2/winpe/";
   filename "winpe/lpxelinux.0";
 }
+
+# run dhcp-event when a lease changes state.
+# see dhcpd.conf(5) and dhcp-eval(5)
+on commit {
+  set client_ip = binary-to-ascii(10, 8, ".", leased-address);
+  set client_hw = binary-to-ascii(16, 8, ":", substring(hardware, 1, 6));
+  execute("/usr/local/sbin/dhcp-event", "commit", client_ip, client_hw, host-decl-name);
+}
+on release {
+  set client_ip = binary-to-ascii(10, 8, ".", leased-address);
+  set client_hw = binary-to-ascii(16, 8, ":", substring(hardware, 1, 6));
+  execute("/usr/local/sbin/dhcp-event", "release", client_ip, client_hw, host-decl-name);
+}
+on expiry {
+  set client_ip = binary-to-ascii(10, 8, ".", leased-address);
+  set client_hw = binary-to-ascii(16, 8, ":", substring(hardware, 1, 6));
+  execute("/usr/local/sbin/dhcp-event", "expiry", client_ip, client_hw, host-decl-name);
+}
 EOF
 sed -i -E 's,^(INTERFACES=).*,\1eth1,' /etc/default/isc-dhcp-server
+cat>/usr/local/sbin/dhcp-event<<'EOF'
+#!/bin/bash
+# this is called when a lease changes state.
+# NB you can see these log entries with journalctl -t dhcp-event
+logger -t dhcp-event "argv: $*"
+for e in $(env); do
+  logger -t dhcp-event "env: $e"
+done
+EOF
+chmod +x /usr/local/sbin/dhcp-event
 systemctl restart isc-dhcp-server
 
 
