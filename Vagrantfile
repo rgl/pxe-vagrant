@@ -1,11 +1,25 @@
+# to make sure the gateway node is created before the other nodes, we
+# have to force a --no-parallel execution.
+ENV['VAGRANT_NO_PARALLEL'] = 'yes'
+
 require 'fileutils'
 
 Vagrant.configure('2') do |config|
   config.vm.box = 'ubuntu-18.04-amd64'
 
+  config.vm.provider :libvirt do |lv, config|
+    lv.memory = 256
+    lv.cpus = 2
+    lv.cpu_mode = 'host-passthrough'
+    # lv.nested = true
+    lv.keymap = 'pt'
+    config.vm.synced_folder '.', '/vagrant', type: 'nfs'
+  end
+
   config.vm.provider :virtualbox do |vb|
     vb.linked_clone = true
     vb.memory = 256
+    vb.cpus = 2
     vb.customize ['modifyvm', :id, '--cableconnected1', 'on']
   end
 
@@ -33,6 +47,42 @@ Vagrant.configure('2') do |config|
   config.vm.define :debian_live do |config|
     config.vm.box = 'empty'
     config.vm.network :private_network, mac: '080027000001', ip: '10.10.10.0', auto_config: false
+    config.vm.provider :libvirt do |lv, config|
+      lv.memory = 2048
+      lv.boot 'network'
+      # set some BIOS settings that will help us identify this particular machine.
+      #
+      #   QEMU                | Linux
+      #   --------------------+----------------------------------------------
+      #   type=1,manufacturer | /sys/devices/virtual/dmi/id/sys_vendor
+      #   type=1,product      | /sys/devices/virtual/dmi/id/product_name
+      #   type=1,version      | /sys/devices/virtual/dmi/id/product_version
+      #   type=1,serial       | /sys/devices/virtual/dmi/id/product_serial
+      #   type=1,sku          | dmidecode
+      #   type=1,uuid         | /sys/devices/virtual/dmi/id/product_uuid
+      #   type=3,manufacturer | /sys/devices/virtual/dmi/id/chassis_vendor
+      #   type=3,family       | /sys/devices/virtual/dmi/id/chassis_type
+      #   type=3,version      | /sys/devices/virtual/dmi/id/chassis_version
+      #   type=3,serial       | /sys/devices/virtual/dmi/id/chassis_serial
+      #   type=3,asset        | /sys/devices/virtual/dmi/id/chassis_asset_tag
+      [
+        'type=1,manufacturer=your vendor name here',
+        'type=1,product=your product name here',
+        'type=1,version=your product version here',
+        'type=1,serial=your product serial number here',
+        'type=1,sku=your product SKU here',
+        'type=1,uuid=00000000-0000-4000-8000-000000000001',
+        'type=3,manufacturer=your chassis vendor name here',
+        #'type=3,family=1', # TODO why this does not work on qemu from ubuntu 18.04?
+        'type=3,version=your chassis version here',
+        'type=3,serial=your chassis serial number here',
+        'type=3,asset=your chassis asset tag here',
+      ].each do |value|
+        lv.qemuargs :value => '-smbios'
+        lv.qemuargs :value => value
+      end
+      config.vm.synced_folder '.', '/vagrant', disabled: true
+    end
     config.vm.provider :virtualbox do |vb, config|
       # make sure this vm has enough memory to load the root fs into memory.
       vb.memory = 2048
@@ -114,6 +164,42 @@ Vagrant.configure('2') do |config|
     config.ssh.username = 'root'
     config.ssh.shell = '/bin/sh'
     config.vm.network :private_network, mac: '080027000002', ip: '10.10.10.0', auto_config: false
+    config.vm.provider :libvirt do |lv, config|
+      lv.memory = 2048
+      lv.boot 'network'
+      # set some BIOS settings that will help us identify this particular machine.
+      #
+      #   QEMU                | Linux
+      #   --------------------+----------------------------------------------
+      #   type=1,manufacturer | /sys/devices/virtual/dmi/id/sys_vendor
+      #   type=1,product      | /sys/devices/virtual/dmi/id/product_name
+      #   type=1,version      | /sys/devices/virtual/dmi/id/product_version
+      #   type=1,serial       | /sys/devices/virtual/dmi/id/product_serial
+      #   type=1,sku          | dmidecode
+      #   type=1,uuid         | /sys/devices/virtual/dmi/id/product_uuid
+      #   type=3,manufacturer | /sys/devices/virtual/dmi/id/chassis_vendor
+      #   type=3,family       | /sys/devices/virtual/dmi/id/chassis_type
+      #   type=3,version      | /sys/devices/virtual/dmi/id/chassis_version
+      #   type=3,serial       | /sys/devices/virtual/dmi/id/chassis_serial
+      #   type=3,asset        | /sys/devices/virtual/dmi/id/chassis_asset_tag
+      [
+        'type=1,manufacturer=your vendor name here',
+        'type=1,product=your product name here',
+        'type=1,version=your product version here',
+        'type=1,serial=your product serial number here',
+        'type=1,sku=your product SKU here',
+        'type=1,uuid=00000000-0000-4000-8000-000000000002',
+        'type=3,manufacturer=your chassis vendor name here',
+        #'type=3,family=1', # TODO why this does not work on qemu from ubuntu 18.04?
+        'type=3,version=your chassis version here',
+        'type=3,serial=your chassis serial number here',
+        'type=3,asset=your chassis asset tag here',
+      ].each do |value|
+        lv.qemuargs :value => '-smbios'
+        lv.qemuargs :value => value
+      end
+      config.vm.synced_folder '.', '/vagrant', disabled: true
+    end
     config.vm.provider :virtualbox do |vb, config|
       # make sure this vm has enough memory to load the root fs into memory.
       vb.memory = 2048
@@ -172,6 +258,41 @@ Vagrant.configure('2') do |config|
     config.vm.network :private_network, mac: '080027000003', ip: '10.10.10.0', auto_config: false
     config.ssh.insert_key = false
     config.ssh.shell = '/bin/sh' # TCL uses BusyBox ash instead of bash.
+    config.vm.provider :libvirt do |lv, config|
+      lv.boot 'network'
+      # set some BIOS settings that will help us identify this particular machine.
+      #
+      #   QEMU                | Linux
+      #   --------------------+----------------------------------------------
+      #   type=1,manufacturer | /sys/devices/virtual/dmi/id/sys_vendor
+      #   type=1,product      | /sys/devices/virtual/dmi/id/product_name
+      #   type=1,version      | /sys/devices/virtual/dmi/id/product_version
+      #   type=1,serial       | /sys/devices/virtual/dmi/id/product_serial
+      #   type=1,sku          | dmidecode
+      #   type=1,uuid         | /sys/devices/virtual/dmi/id/product_uuid
+      #   type=3,manufacturer | /sys/devices/virtual/dmi/id/chassis_vendor
+      #   type=3,family       | /sys/devices/virtual/dmi/id/chassis_type
+      #   type=3,version      | /sys/devices/virtual/dmi/id/chassis_version
+      #   type=3,serial       | /sys/devices/virtual/dmi/id/chassis_serial
+      #   type=3,asset        | /sys/devices/virtual/dmi/id/chassis_asset_tag
+      [
+        'type=1,manufacturer=your vendor name here',
+        'type=1,product=your product name here',
+        'type=1,version=your product version here',
+        'type=1,serial=your product serial number here',
+        'type=1,sku=your product SKU here',
+        'type=1,uuid=00000000-0000-4000-8000-000000000003',
+        'type=3,manufacturer=your chassis vendor name here',
+        #'type=3,family=1', # TODO why this does not work on qemu from ubuntu 18.04?
+        'type=3,version=your chassis version here',
+        'type=3,serial=your chassis serial number here',
+        'type=3,asset=your chassis asset tag here',
+      ].each do |value|
+        lv.qemuargs :value => '-smbios'
+        lv.qemuargs :value => value
+      end
+      config.vm.synced_folder '.', '/vagrant', disabled: true
+    end
     config.vm.provider :virtualbox do |vb, config|
       # let vagrant known that the guest does not have the guest additions nor a functional vboxsf or shared folders.
       vb.check_guest_additions = false
@@ -250,6 +371,42 @@ Vagrant.configure('2') do |config|
   config.vm.define :winpe do |config|
     config.vm.box = 'empty'
     config.vm.network :private_network, mac: '080027000004', ip: '10.10.10.0', auto_config: false
+    config.vm.provider :libvirt do |lv, config|
+      lv.memory = 2048
+      lv.boot 'network'
+      # set some BIOS settings that will help us identify this particular machine.
+      #
+      #   QEMU                | Linux
+      #   --------------------+----------------------------------------------
+      #   type=1,manufacturer | /sys/devices/virtual/dmi/id/sys_vendor
+      #   type=1,product      | /sys/devices/virtual/dmi/id/product_name
+      #   type=1,version      | /sys/devices/virtual/dmi/id/product_version
+      #   type=1,serial       | /sys/devices/virtual/dmi/id/product_serial
+      #   type=1,sku          | dmidecode
+      #   type=1,uuid         | /sys/devices/virtual/dmi/id/product_uuid
+      #   type=3,manufacturer | /sys/devices/virtual/dmi/id/chassis_vendor
+      #   type=3,family       | /sys/devices/virtual/dmi/id/chassis_type
+      #   type=3,version      | /sys/devices/virtual/dmi/id/chassis_version
+      #   type=3,serial       | /sys/devices/virtual/dmi/id/chassis_serial
+      #   type=3,asset        | /sys/devices/virtual/dmi/id/chassis_asset_tag
+      [
+        'type=1,manufacturer=your vendor name here',
+        'type=1,product=your product name here',
+        'type=1,version=your product version here',
+        'type=1,serial=your product serial number here',
+        'type=1,sku=your product SKU here',
+        'type=1,uuid=00000000-0000-4000-8000-000000000004',
+        'type=3,manufacturer=your chassis vendor name here',
+        #'type=3,family=1', # TODO why this does not work on qemu from ubuntu 18.04?
+        'type=3,version=your chassis version here',
+        'type=3,serial=your chassis serial number here',
+        'type=3,asset=your chassis asset tag here',
+      ].each do |value|
+        lv.qemuargs :value => '-smbios'
+        lv.qemuargs :value => value
+      end
+      config.vm.synced_folder '.', '/vagrant', disabled: true
+    end
     config.vm.provider :virtualbox do |vb, config|
       # make sure this vm has enough memory to load the root fs into memory.
       vb.memory = 2048
