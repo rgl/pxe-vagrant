@@ -22,7 +22,7 @@ Vagrant.configure('2') do |config|
       ].each do |source|
         destination = "tmp/#{File.basename(source)}"
         if File.exist?(source) && (!File.exist?(destination) || File.mtime(source) > File.mtime(destination))
-          info "Copying #{source} to #{destination}..."
+          puts "Copying #{source} to #{destination}..."
           FileUtils.mkdir_p('tmp')
           FileUtils.cp(source, destination)
         end
@@ -60,10 +60,10 @@ Vagrant.configure('2') do |config|
       #   DmiSystemSerial     | /sys/devices/virtual/dmi/id/product_serial
       #   DmiSystemSKU        | TODO where do we read this from?
       #   DmiSystemUuid       | /sys/devices/virtual/dmi/id/product_uuid
-      #   DmiChassisVendor    | /sys/devices/virtual/dmi/id/chassis_asset_tag
+      #   DmiChassisVendor    | /sys/devices/virtual/dmi/id/chassis_vendor
       #   DmiChassisType      | /sys/devices/virtual/dmi/id/chassis_type
-      #   DmiChassisVersion   ! /sys/devices/virtual/dmi/id/chassis_version
-      #   DmiChassisSerial    ! /sys/devices/virtual/dmi/id/chassis_serial
+      #   DmiChassisVersion   | /sys/devices/virtual/dmi/id/chassis_version
+      #   DmiChassisSerial    | /sys/devices/virtual/dmi/id/chassis_serial
       #   DmiChassisAssetTag  | /sys/devices/virtual/dmi/id/chassis_asset_tag
       #
       # See https://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/PC/DevPcBios.cpp
@@ -141,10 +141,10 @@ Vagrant.configure('2') do |config|
       #   DmiSystemSerial     | /sys/devices/virtual/dmi/id/product_serial
       #   DmiSystemSKU        | TODO where do we read this from?
       #   DmiSystemUuid       | /sys/devices/virtual/dmi/id/product_uuid
-      #   DmiChassisVendor    | /sys/devices/virtual/dmi/id/chassis_asset_tag
+      #   DmiChassisVendor    | /sys/devices/virtual/dmi/id/chassis_vendor
       #   DmiChassisType      | /sys/devices/virtual/dmi/id/chassis_type
-      #   DmiChassisVersion   ! /sys/devices/virtual/dmi/id/chassis_version
-      #   DmiChassisSerial    ! /sys/devices/virtual/dmi/id/chassis_serial
+      #   DmiChassisVersion   | /sys/devices/virtual/dmi/id/chassis_version
+      #   DmiChassisSerial    | /sys/devices/virtual/dmi/id/chassis_serial
       #   DmiChassisAssetTag  | /sys/devices/virtual/dmi/id/chassis_asset_tag
       #
       # See https://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/PC/DevPcBios.cpp
@@ -196,10 +196,10 @@ Vagrant.configure('2') do |config|
       #   DmiSystemSerial     | /sys/devices/virtual/dmi/id/product_serial
       #   DmiSystemSKU        | TODO where do we read this from?
       #   DmiSystemUuid       | /sys/devices/virtual/dmi/id/product_uuid
-      #   DmiChassisVendor    | /sys/devices/virtual/dmi/id/chassis_asset_tag
+      #   DmiChassisVendor    | /sys/devices/virtual/dmi/id/chassis_vendor
       #   DmiChassisType      | /sys/devices/virtual/dmi/id/chassis_type
-      #   DmiChassisVersion   ! /sys/devices/virtual/dmi/id/chassis_version
-      #   DmiChassisSerial    ! /sys/devices/virtual/dmi/id/chassis_serial
+      #   DmiChassisVersion   | /sys/devices/virtual/dmi/id/chassis_version
+      #   DmiChassisSerial    | /sys/devices/virtual/dmi/id/chassis_serial
       #   DmiChassisAssetTag  | /sys/devices/virtual/dmi/id/chassis_asset_tag
       #
       # See https://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/PC/DevPcBios.cpp
