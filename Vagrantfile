@@ -58,7 +58,7 @@ Vagrant.configure('2') do |config|
       #   DmiSystemProduct    | /sys/devices/virtual/dmi/id/product_name
       #   DmiSystemVersion    | /sys/devices/virtual/dmi/id/product_version
       #   DmiSystemSerial     | /sys/devices/virtual/dmi/id/product_serial
-      #   DmiSystemSKU        | TODO where do we read this from?
+      #   DmiSystemSKU        | dmidecode
       #   DmiSystemUuid       | /sys/devices/virtual/dmi/id/product_uuid
       #   DmiChassisVendor    | /sys/devices/virtual/dmi/id/chassis_vendor
       #   DmiChassisType      | /sys/devices/virtual/dmi/id/chassis_type
@@ -139,7 +139,7 @@ Vagrant.configure('2') do |config|
       #   DmiSystemProduct    | /sys/devices/virtual/dmi/id/product_name
       #   DmiSystemVersion    | /sys/devices/virtual/dmi/id/product_version
       #   DmiSystemSerial     | /sys/devices/virtual/dmi/id/product_serial
-      #   DmiSystemSKU        | TODO where do we read this from?
+      #   DmiSystemSKU        | dmidecode
       #   DmiSystemUuid       | /sys/devices/virtual/dmi/id/product_uuid
       #   DmiChassisVendor    | /sys/devices/virtual/dmi/id/chassis_vendor
       #   DmiChassisType      | /sys/devices/virtual/dmi/id/chassis_type
@@ -194,7 +194,7 @@ Vagrant.configure('2') do |config|
       #   DmiSystemProduct    | /sys/devices/virtual/dmi/id/product_name
       #   DmiSystemVersion    | /sys/devices/virtual/dmi/id/product_version
       #   DmiSystemSerial     | /sys/devices/virtual/dmi/id/product_serial
-      #   DmiSystemSKU        | TODO where do we read this from?
+      #   DmiSystemSKU        | dmidecode
       #   DmiSystemUuid       | /sys/devices/virtual/dmi/id/product_uuid
       #   DmiChassisVendor    | /sys/devices/virtual/dmi/id/chassis_vendor
       #   DmiChassisType      | /sys/devices/virtual/dmi/id/chassis_type
