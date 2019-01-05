@@ -303,7 +303,7 @@ systemctl restart isc-dhcp-server
 # setup NAT.
 # see https://help.ubuntu.com/community/IptablesHowTo
 
-apt-get install -y iptables
+apt-get install -y iptables iptables-persistent
 
 # enable IPv4 forwarding.
 sysctl net.ipv4.ip_forward=1
@@ -314,9 +314,4 @@ sed -i -E 's,^\s*#?\s*(net.ipv4.ip_forward=).+,\11,g' /etc/sysctl.conf
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
 # load iptables rules on boot.
-iptables-save >/etc/iptables-rules-v4.conf
-cat<<'EOF'>/etc/network/if-pre-up.d/iptables-restore
-#!/bin/sh
-iptables-restore </etc/iptables-rules-v4.conf
-EOF
-chmod +x /etc/network/if-pre-up.d/iptables-restore
+iptables-save >/etc/iptables/rules.v4
