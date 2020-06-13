@@ -2,6 +2,10 @@
 # have to force a --no-parallel execution.
 ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 
+# the network prefix we use in this environment.
+# NB this must be a /24 prefixed network.
+$network_address_prefix = '10.10.10'
+
 require 'fileutils'
 
 Vagrant.configure('2') do |config|
@@ -25,8 +29,8 @@ Vagrant.configure('2') do |config|
 
   config.vm.define :gateway do |config|
     config.vm.hostname = 'gateway'
-    config.vm.network :private_network, ip: "10.10.10.2", libvirt__dhcp_enabled: false, libvirt__forward_mode: 'none'
-    config.vm.provision :shell, path: 'gateway.sh'
+    config.vm.network :private_network, ip: "#{$network_address_prefix}.2", libvirt__dhcp_enabled: false, libvirt__forward_mode: 'none'
+    config.vm.provision :shell, path: 'gateway.sh', args: [$network_address_prefix]
     config.trigger.before :up do
       [
         '../debian-live-builder-vagrant/live-image-amd64.hybrid.iso',
@@ -46,7 +50,7 @@ Vagrant.configure('2') do |config|
 
   config.vm.define :debian_live do |config|
     config.vm.box = 'empty'
-    config.vm.network :private_network, mac: '080027000001', ip: '10.10.10.0', auto_config: false
+    config.vm.network :private_network, mac: '080027000001', ip: "#{$network_address_prefix}.0", auto_config: false
     config.vm.provider :libvirt do |lv, config|
       lv.memory = 2048
       lv.boot 'network'
@@ -137,12 +141,14 @@ Vagrant.configure('2') do |config|
 
     # make sure we use the gateway machine as this machine default gateway.
     # NB the 10.0.2/24 network is the default VirtualBox NAT network, which we must replace with our gateway.
-    config.vm.provision :shell, run: 'always', inline: 'ip route list 0/0 | xargs ip route del; ip route add default via 10.10.10.2'
+    config.vm.provision :shell, run: 'always', inline: "ip route list 0/0 | xargs ip route del; ip route add default via #{$network_address_prefix}.2"
 
     # dump some useful information.
     config.vm.provision :shell, inline: '''
         set -x
         uname -a
+        cat /etc/network/interfaces
+        ip addr
         ip route
         ip route get 8.8.8.8
         cat /proc/cmdline
@@ -163,7 +169,7 @@ Vagrant.configure('2') do |config|
     config.vm.box = 'empty'
     config.ssh.username = 'root'
     config.ssh.shell = '/bin/sh'
-    config.vm.network :private_network, mac: '080027000002', ip: '10.10.10.0', auto_config: false
+    config.vm.network :private_network, mac: '080027000002', ip: "#{$network_address_prefix}.0", auto_config: false
     config.vm.provider :libvirt do |lv, config|
       lv.memory = 2048
       lv.boot 'network'
@@ -255,7 +261,7 @@ Vagrant.configure('2') do |config|
 
   config.vm.define :tcl do |config|
     config.vm.box = 'empty'
-    config.vm.network :private_network, mac: '080027000003', ip: '10.10.10.0', auto_config: false
+    config.vm.network :private_network, mac: '080027000003', ip: "#{$network_address_prefix}.0", auto_config: false
     config.ssh.insert_key = false
     config.ssh.shell = '/bin/sh' # TCL uses BusyBox ash instead of bash.
     config.vm.provider :libvirt do |lv, config|
@@ -370,7 +376,7 @@ Vagrant.configure('2') do |config|
 
   config.vm.define :winpe do |config|
     config.vm.box = 'empty'
-    config.vm.network :private_network, mac: '080027000004', ip: '10.10.10.0', auto_config: false
+    config.vm.network :private_network, mac: '080027000004', ip: "#{$network_address_prefix}.0", auto_config: false
     config.vm.provider :libvirt do |lv, config|
       lv.memory = 2048
       lv.boot 'network'

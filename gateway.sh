@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eux
 
+network_address_prefix="${1:-10.10.10}"; shift || true
+
 echo 'Defaults env_keep += "DEBIAN_FRONTEND"' >/etc/sudoers.d/env_keep_apt
 chmod 440 /etc/sudoers.d/env_keep_apt
 export DEBIAN_FRONTEND=noninteractive
@@ -73,6 +75,7 @@ if [ -f /vagrant/tmp/live-image-amd64.hybrid.iso ]; then
 mkdir -p /srv/tftp/debian-live/pxelinux.cfg
 pushd /srv/tftp/debian-live
 # configure pxelinux to boot debian-live.
+# see https://manpages.debian.org/stretch/live-boot-doc/live-boot.7.en.html
 cp $HOME/$SYSLINUX/bios/com32/elflink/ldlinux/ldlinux.c32 .
 cp $HOME/$SYSLINUX/bios/core/lpxelinux.0 .
 cat >pxelinux.cfg/default <<'EOF'
@@ -80,9 +83,11 @@ default linux
 label linux
 kernel vmlinuz
 initrd initrd.img
-append net.ifnames=0 boot=live components username=vagrant fetch=http://10.10.10.2/debian-live/filesystem.squashfs
+# boot from an http downloaded filesystem.squashfs:
+append net.ifnames=0 boot=live fetch=http://$network_address_prefix.2/debian-live/filesystem.squashfs components username=vagrant
 EOF
 apt-get install -y --no-install-recommends p7zip-full
+# make linux, initrd and the root filesystem available from tftp and http.
 7z x -otmp /vagrant/tmp/live-image-amd64.hybrid.iso live/{vmlinuz,initrd.img,filesystem.squashfs}
 mv tmp/live/* .
 rm -rf tmp
@@ -168,6 +173,7 @@ kernel vmlinuz64
 initrd corepure64.gz,provision.gz
 append base norestore noswap noautologin user=vagrant
 EOF
+# test with: atftp --get --local-file lpxelinux.0 --remote-file tcl/lpxelinux.0 127.0.0.1
 popd
 
 
@@ -195,6 +201,7 @@ com32 linux.c32
 append wimboot initrdfile=bootmgr,BCD,boot.sdi,boot.wim
 EOF
 popd
+# test with: atftp --get --local-file lpxelinux.0 --remote-file winpe/lpxelinux.0 127.0.0.1
 fi
 
 
@@ -203,9 +210,9 @@ fi
 
 apt-get install -y --no-install-recommends nginx
 rm /etc/nginx/sites-enabled/default
-cat>/etc/nginx/sites-available/boot.conf<<'EOF'
+cat >/etc/nginx/sites-available/boot.conf <<EOF
 server {
-  listen 10.10.10.2:80;
+  listen $network_address_prefix.2:80;
   root /srv/tftp;
   autoindex on;
   access_log /var/log/nginx/boot.access.log;
@@ -220,7 +227,7 @@ systemctl restart nginx
 # see http://www.syslinux.org/wiki/index.php?title=PXELINUX
 
 apt-get install -y --no-install-recommends isc-dhcp-server
-cat>/etc/dhcp/dhcpd.conf<<'EOF'
+cat >/etc/dhcp/dhcpd.conf <<EOF
 option space pxelinux;
 option pxelinux.configfile code 209 = text;
 option pxelinux.pathprefix code 210 = text;
@@ -235,9 +242,9 @@ default-lease-time 300;
 max-lease-time 300;
 option domain-name-servers 8.8.8.8, 8.8.4.4;
 option subnet-mask 255.255.255.0;
-option routers 10.10.10.2;
-subnet 10.10.10.0 netmask 255.255.255.0 {
-  range 10.10.10.100 10.10.10.254;
+option routers $network_address_prefix.2;
+subnet $network_address_prefix.0 netmask 255.255.255.0 {
+  range $network_address_prefix.100 $network_address_prefix.254;
 }
 
 # NB we reuse the VirtualBox MAC 08:00:27 (Cadmus Computer Systems) vendor.
@@ -245,25 +252,25 @@ subnet 10.10.10.0 netmask 255.255.255.0 {
 
 host debian-live {
   hardware ethernet 08:00:27:00:00:01;
-  option pxelinux.pathprefix "http://10.10.10.2/debian-live/";
+  option pxelinux.pathprefix "http://$network_address_prefix.2/debian-live/";
   filename "debian-live/lpxelinux.0";
 }
 
 host linuxkit {
   hardware ethernet 08:00:27:00:00:02;
-  option pxelinux.pathprefix "http://10.10.10.2/linuxkit/";
+  option pxelinux.pathprefix "http://$network_address_prefix.2/linuxkit/";
   filename "linuxkit/lpxelinux.0";
 }
 
 host tcl {
   hardware ethernet 08:00:27:00:00:03;
-  option pxelinux.pathprefix "http://10.10.10.2/tcl/";
+  option pxelinux.pathprefix "http://$network_address_prefix.2/tcl/";
   filename "tcl/lpxelinux.0";
 }
 
 host winpe {
   hardware ethernet 08:00:27:00:00:04;
-  option pxelinux.pathprefix "http://10.10.10.2/winpe/";
+  option pxelinux.pathprefix "http://$network_address_prefix.2/winpe/";
   filename "winpe/lpxelinux.0";
 }
 
@@ -286,7 +293,7 @@ on expiry {
 }
 EOF
 sed -i -E 's,^(INTERFACES=).*,\1eth1,' /etc/default/isc-dhcp-server
-cat>/usr/local/sbin/dhcp-event<<'EOF'
+cat >/usr/local/sbin/dhcp-event <<'EOF'
 #!/bin/bash
 # this is called when a lease changes state.
 # NB you can see these log entries with journalctl -t dhcp-event
