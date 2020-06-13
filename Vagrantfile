@@ -25,7 +25,7 @@ Vagrant.configure('2') do |config|
 
   config.vm.define :gateway do |config|
     config.vm.hostname = 'gateway'
-    config.vm.network :private_network, ip: '10.10.10.2'
+    config.vm.network :private_network, ip: "10.10.10.2", libvirt__dhcp_enabled: false, libvirt__forward_mode: 'none'
     config.vm.provision :shell, path: 'gateway.sh'
     config.trigger.before :up do
       [
