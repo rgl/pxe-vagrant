@@ -71,5 +71,6 @@ This is roughly how Debian Live Linux is booted on a PXE PC:
 You can see all of this if you run the following command on your linux host before launching the `debian_live` vm:
 
 ```bash
-wireshark -k -i <(ssh -i .vagrant/machines/gateway/virtualbox/private_key vagrant@10.10.10.2 'sudo tcpdump -s 0 -U -n -i eth1 -w - not tcp port 22')
+vagrant ssh-config gateway >tmp/gateway-ssh-config.conf
+wireshark -k -i <(ssh -F tmp/gateway-ssh-config.conf gateway 'sudo tcpdump -s 0 -U -n -i eth1 -w - not port 22')
 ```
