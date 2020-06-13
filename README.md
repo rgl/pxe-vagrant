@@ -4,6 +4,8 @@ This is a [Vagrant](https://www.vagrantup.com/) Environment for a [Preboot Execu
 
 # Usage
 
+Install the [Ubuntu 20.04 base box](https://github.com/rgl/ubuntu-vagrant).
+
 Run `create_empty_box.sh` to create the `empty` environment (the PXE client machines use it as a base box).
 
 Run `vagrant up gateway` to launch the gateway.
