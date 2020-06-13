@@ -8,15 +8,15 @@ Install the [Ubuntu 20.04 base box](https://github.com/rgl/ubuntu-vagrant).
 
 Run `create_empty_box.sh` to create the `empty` environment (the PXE client machines use it as a base box).
 
-Run `vagrant up gateway` to launch the gateway.
+Run `vagrant up gateway --no-destroy-on-error` to launch the gateway.
 
-Run `vagrant up debian_live` to launch the `debian_live` (Debian Live) PXE client. This assumes you have `../debian-live-builder-vagrant/live-image-amd64.hybrid.iso` built as described at the [rgl/debian-live-builder-vagrant](https://github.com/rgl/debian-live-builder-vagrant) repository.
+Run `vagrant up debian_live --no-destroy-on-error` to launch the `debian_live` (Debian Live) PXE client. This assumes you have `../debian-live-builder-vagrant/live-image-amd64.hybrid.iso` built as described at the [rgl/debian-live-builder-vagrant](https://github.com/rgl/debian-live-builder-vagrant) repository.
 
-Run `vagrant up linuxkit` to launch the `linuxkit` (LinuxKit) PXE client. This assumes you have `../linuxkit-vagrant/shared/sshd-kernel` (and `sshd-initrd.img`) built as described at the [rgl/linuxkit-vagrant](https://github.com/rgl/linuxkit-vagrant) repository.
+Run `vagrant up linuxkit --no-destroy-on-error` to launch the `linuxkit` (LinuxKit) PXE client. This assumes you have `../linuxkit-vagrant/shared/sshd-kernel` (and `sshd-initrd.img`) built as described at the [rgl/linuxkit-vagrant](https://github.com/rgl/linuxkit-vagrant) repository.
 
-Run `vagrant up tcl` to launch the `tcl` (Tiny Core Linux) PXE client.
+Run `vagrant up tcl --no-destroy-on-error` to launch the `tcl` (Tiny Core Linux) PXE client.
 
-Run `vagrant up winpe` to launch the `winpe` (Windows PE) PXE client. This assumes you have `../windows-pe-vagrant/tmp/winpe-amd64.iso` built as described at the [rgl/windows-pe-vagrant](https://github.com/rgl/windows-pe-vagrant) repository. Note that vagrant wont be able to connect to it; the ideia is just to see it PXE boot.
+Run `vagrant up winpe --no-destroy-on-error` to launch the `winpe` (Windows PE) PXE client. This assumes you have `../windows-pe-vagrant/tmp/winpe-amd64.iso` built as described at the [rgl/windows-pe-vagrant](https://github.com/rgl/windows-pe-vagrant) repository. Note that vagrant wont be able to connect to it; the idea is just to see it PXE boot.
 
 # PXE boot
 
