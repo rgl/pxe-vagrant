@@ -23,8 +23,10 @@ Run `vagrant up winpe --no-destroy-on-error` to launch the `winpe` (Windows PE) 
 This is roughly how Debian Live Linux is booted on a PXE PC:
 
 1. The PC broadcasts an DHCP request
-2. The DHCP server returns the TFTP address of the bootloader (`lpxelinux.0`)
-3. The PC TFTP downloads the `lpxelinux.0` file
+2. The DHCP server offers the TFTP server address (`10.10.10.2`) in the
+   `Next server IP address` field and the bootloader (`debian-live/lpxelinux.0`)
+   filename in the `Boot file name` field
+3. The PC TFTP downloads the `debian-live/lpxelinux.0` file
 4. `lpxelinux.0` HTTP downloads `ldlinux.c32` with a request similar to:
     ```plain
     GET /debian-live/ldlinux.c32 HTTP/1.0
