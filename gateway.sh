@@ -131,7 +131,7 @@ apt-get install -y --no-install-recommends advancecomp
 apt-get install -y --no-install-recommends squashfs-tools
 
 mkdir /srv/tftp/tcl && pushd /srv/tftp/tcl
-TCL_REPOSITORY=http://tinycorelinux.net/11.x/x86_64
+TCL_REPOSITORY=http://tinycorelinux.net/12.x/x86_64
 # corepure64.gz contains all the files on rootfs64 and modules64 merged together in a single smaller file.
 #wget -q $TCL_REPOSITORY/release/distribution_files/{vmlinuz64,corepure64.gz,rootfs64.gz,modules64.gz}
 wget -q $TCL_REPOSITORY/release/distribution_files/{vmlinuz64,corepure64.gz}
