@@ -57,15 +57,21 @@ tar xf $HOME/$SYSLINUX.tar.xz -C $HOME
 # get wimboot.
 # see http://ipxe.org/wimboot
 
-WIMBOOT=wimboot-2.6.0-signed
-WIMBOOT_URL=http://git.ipxe.org/releases/wimboot/$WIMBOOT.tar.bz2
-WIMBOOT_SHA=f4f9304da9193cbe4584b47c65e0eaf0cc2af0d2052d1e47e8a089445b7ac1c3
+WIMBOOT_URL=https://github.com/ipxe/wimboot/releases/download/v2.7.2/wimboot
+WIMBOOT_SHA=5115831f27a487ef7d7671235c1d015122a92a1187681ee10de92574d54058db
 wget -q -P $HOME $WIMBOOT_URL
-if [ "$(sha256sum $HOME/$WIMBOOT.tar.bz2 | awk '{print $1}')" != "$WIMBOOT_SHA" ]; then
+if [ "$(sha256sum $HOME/wimboot | awk '{print $1}')" != "$WIMBOOT_SHA" ]; then
     echo "downloaded $WIMBOOT_URL failed the checksum verification"
     exit 1
 fi
-tar xf $HOME/$WIMBOOT.tar.bz2 -C $HOME
+
+# verify its efi signature.
+# NB it should be signed by Microsoft Corporation UEFI CA 2011.
+apt-get install -y sbsigntool
+wget -q -U hello -P $HOME https://www.microsoft.com/pkiops/certs/MicCorUEFCA2011_2011-06-27.crt
+openssl x509 -text -noout -inform der -in $HOME/MicCorUEFCA2011_2011-06-27.crt
+openssl x509 -inform der -in $HOME/MicCorUEFCA2011_2011-06-27.crt -out $HOME/MicCorUEFCA2011_2011-06-27-crt.pem
+sbverify --verbose --cert $HOME/MicCorUEFCA2011_2011-06-27-crt.pem $HOME/wimboot
 
 
 #
@@ -190,15 +196,15 @@ cp $HOME/$SYSLINUX/bios/com32/elflink/ldlinux/ldlinux.c32 .
 cp $HOME/$SYSLINUX/bios/com32/modules/linux.c32 .
 cp $HOME/$SYSLINUX/bios/com32/lib/libcom32.c32 .
 cp $HOME/$SYSLINUX/bios/core/lpxelinux.0 .
-cp $HOME/$WIMBOOT/wimboot .
-7z x -otmp /vagrant/tmp/winpe-amd64.iso bootmgr Boot/{BCD,boot.sdi} sources/boot.wim
+cp $HOME/wimboot .
+7z x -otmp /vagrant/tmp/winpe-amd64.iso Boot/{BCD,boot.sdi} sources/boot.wim
 find tmp -type f -exec mv {} $PWD \;
 rm -rf tmp
 cat >pxelinux.cfg/default <<'EOF'
 default winpe
 label winpe
 com32 linux.c32
-append wimboot initrdfile=bootmgr,BCD,boot.sdi,boot.wim
+append wimboot initrdfile=BCD,boot.sdi,boot.wim
 EOF
 popd
 # test with: atftp --get --local-file lpxelinux.0 --remote-file winpe/lpxelinux.0 127.0.0.1
