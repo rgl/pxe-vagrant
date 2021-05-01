@@ -6,7 +6,7 @@ mkdir -p tmp-empty-box
 pushd tmp-empty-box
 
 # create and add an empty box to the virtualbox provider.
-TEMPLATE_BOX=~/.vagrant.d/boxes/ubuntu-18.04-amd64/0/virtualbox
+TEMPLATE_BOX=~/.vagrant.d/boxes/ubuntu-20.04-amd64/0/virtualbox
 if [ ! -d ~/.vagrant.d/boxes/empty/0/virtualbox ] && [ -d $TEMPLATE_BOX ]; then
 echo '{"provider":"virtualbox"}' >metadata.json
 VBoxManage createhd --filename empty.vmdk --format VMDK --size 10000
@@ -22,7 +22,7 @@ vagrant box add --force empty empty.box
 fi
 
 # create and add an empty box to the libvirt provider.
-TEMPLATE_BOX=~/.vagrant.d/boxes/ubuntu-18.04-amd64/0/libvirt
+TEMPLATE_BOX=~/.vagrant.d/boxes/ubuntu-20.04-amd64/0/libvirt
 if [ ! -d ~/.vagrant.d/boxes/empty/0/libvirt ] && [ -d $TEMPLATE_BOX ]; then
 rm -f *
 cp $TEMPLATE_BOX/Vagrantfile .
