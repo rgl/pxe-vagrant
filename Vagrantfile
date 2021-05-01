@@ -30,6 +30,12 @@ Vagrant.configure('2') do |config|
   config.vm.define :gateway do |config|
     config.vm.hostname = 'gateway'
     config.vm.network :private_network, ip: "#{$network_address_prefix}.2", libvirt__dhcp_enabled: false, libvirt__forward_mode: 'none'
+    config.vm.provider :libvirt do |lv, config|
+      lv.memory = 512
+    end
+    config.vm.provider :virtualbox do |vb, config|
+      vb.memory = 512
+    end
     config.vm.provision :shell, path: 'gateway.sh', args: [$network_address_prefix]
     config.trigger.before :up do
       [
