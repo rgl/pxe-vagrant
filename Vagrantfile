@@ -411,7 +411,8 @@ Vagrant.configure('2') do |config|
         lv.qemuargs :value => '-smbios'
         lv.qemuargs :value => value
       end
-      config.vm.synced_folder '.', '/vagrant', disabled: true
+      lv.mgmt_attach = false
+      config.vm.box = nil
     end
     config.vm.provider :virtualbox do |vb, config|
       # make sure this vm has enough memory to load the root fs into memory.
