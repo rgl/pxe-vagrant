@@ -267,24 +267,28 @@ subnet $network_address_prefix.0 netmask 255.255.255.0 {
 
 host debian-live {
   hardware ethernet 08:00:27:00:00:01;
+  fixed-address $network_address_prefix.101;
   option pxelinux.pathprefix "http://$network_address_prefix.2/debian-live/";
   filename "debian-live/lpxelinux.0";
 }
 
 host linuxkit {
   hardware ethernet 08:00:27:00:00:02;
+  fixed-address $network_address_prefix.102;
   option pxelinux.pathprefix "http://$network_address_prefix.2/linuxkit/";
   filename "linuxkit/lpxelinux.0";
 }
 
 host tcl {
   hardware ethernet 08:00:27:00:00:03;
+  fixed-address $network_address_prefix.103;
   option pxelinux.pathprefix "http://$network_address_prefix.2/tcl/";
   filename "tcl/lpxelinux.0";
 }
 
 host winpe {
   hardware ethernet 08:00:27:00:00:04;
+  fixed-address $network_address_prefix.104;
   option pxelinux.pathprefix "http://$network_address_prefix.2/winpe/";
   filename "winpe/lpxelinux.0";
 }
