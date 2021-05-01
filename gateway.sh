@@ -81,16 +81,25 @@ if [ -f /vagrant/tmp/live-image-amd64.hybrid.iso ]; then
 mkdir -p /srv/tftp/debian-live/pxelinux.cfg
 pushd /srv/tftp/debian-live
 # configure pxelinux to boot debian-live.
-# see https://manpages.debian.org/stretch/live-boot-doc/live-boot.7.en.html
+# see https://manpages.debian.org/buster/live-boot-doc/live-boot.7.en.html
+# see https://manpages.debian.org/buster/live-config-doc/live-config.7.en.html
+# see https://manpages.debian.org/buster/manpages/bootparam.7.en.html
+# see https://manpages.debian.org/buster/udev/systemd-udevd.service.8.en.html
+# see https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/bootconfig.rst
+# see https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.txt
+# NB since we are using multiple network interfaces in our debian_live vm, we
+#    use the live-netdev boot parameter to make sure the live system initramfs
+#    configures the correct network interface before trying to fetch the live
+#    root filesystem.
 cp $HOME/$SYSLINUX/bios/com32/elflink/ldlinux/ldlinux.c32 .
 cp $HOME/$SYSLINUX/bios/core/lpxelinux.0 .
-cat >pxelinux.cfg/default <<'EOF'
+cat >pxelinux.cfg/default <<EOF
 default linux
 label linux
 kernel vmlinuz
 initrd initrd.img
 # boot from an http downloaded filesystem.squashfs:
-append net.ifnames=0 boot=live fetch=http://$network_address_prefix.2/debian-live/filesystem.squashfs components username=vagrant
+append net.ifnames=0 boot=live live-netdev=eth1 ethdevice-timeout=60 fetch=http://$network_address_prefix.2/debian-live/filesystem.squashfs components username=vagrant
 EOF
 apt-get install -y --no-install-recommends p7zip-full
 # make linux, initrd and the root filesystem available from tftp and http.
