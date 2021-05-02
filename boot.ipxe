@@ -1,0 +1,3 @@
+#!ipxe
+ifconf --configurator dhcp net0
+chain --autofree --replace http://${next-server}/ipxe/${net0/mac}/boot.ipxe

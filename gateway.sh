@@ -3,6 +3,14 @@ set -eux
 
 network_address_prefix="${1:-10.10.10}"; shift || true
 
+# set which os will be booted in the g2-mini host.
+g2_mini_host_os='debian-live'
+#g2_mini_host_os='winpe'
+
+# set which mac address the g2-mini host has.
+g2_mini_host_mac='ec:b1:d7:71:ff:f3'
+
+
 echo 'Defaults env_keep += "DEBIAN_FRONTEND"' >/etc/sudoers.d/env_keep_apt
 chmod 440 /etc/sudoers.d/env_keep_apt
 export DEBIAN_FRONTEND=noninteractive
@@ -51,6 +59,15 @@ apt-get install -y xz-utils
 SYSLINUX=syslinux-6.03
 wget -q -P $HOME https://www.kernel.org/pub/linux/utils/boot/syslinux/$SYSLINUX.tar.xz
 tar xf $HOME/$SYSLINUX.tar.xz -C $HOME
+
+
+#
+# get ipxe.
+
+apt-get install -y git-core build-essential
+bash /vagrant/build-ipxe.sh
+mkdir -p /srv/tftp/ipxe
+cp $HOME/ipxe/src/bin-x86_64-efi/ipxe.efi /srv/tftp/ipxe
 
 
 #
@@ -108,6 +125,19 @@ mv tmp/live/* .
 rm -rf tmp
 popd
 # test with: atftp --get --local-file lpxelinux.0 --remote-file debian-live/lpxelinux.0 127.0.0.1
+fi
+
+# configure the g2-mini host to boot debian-live.
+if [ "$g2_mini_host_os" == 'debian-live' ]; then
+pushd /srv/tftp/ipxe
+mkdir -p $g2_mini_host_mac && cd $g2_mini_host_mac
+cat >boot.ipxe <<'EOF'
+#!ipxe
+set base_url http://${next-server}/debian-live
+initrd ${base_url}/initrd.img
+chain --autofree --replace ${base_url}/vmlinuz initrd=initrd.img net.ifnames=0 boot=live fetch=${base_url}/filesystem.squashfs components username=vagrant
+EOF
+popd
 fi
 
 
@@ -219,6 +249,21 @@ popd
 # test with: atftp --get --local-file lpxelinux.0 --remote-file winpe/lpxelinux.0 127.0.0.1
 fi
 
+# configure the g2-mini host to boot winpe.
+if [ "$g2_mini_host_os" == 'winpe' ]; then
+pushd /srv/tftp/ipxe
+mkdir -p $g2_mini_host_mac && cd $g2_mini_host_mac
+cat >boot.ipxe <<'EOF'
+#!ipxe
+set base_url http://${next-server}/winpe
+initrd ${base_url}/BCD
+initrd ${base_url}/boot.sdi
+initrd ${base_url}/boot.wim
+chain --autofree --replace ${base_url}/wimboot
+EOF
+popd
+fi
+
 
 #
 # provision the HTTP server.
@@ -291,6 +336,20 @@ host winpe {
   fixed-address $network_address_prefix.104;
   option pxelinux.pathprefix "http://$network_address_prefix.2/winpe/";
   filename "winpe/lpxelinux.0";
+}
+
+# This host is my physical HP EliteDesk 800 35W G2 Desktop Mini.
+# https://support.hp.com/us-en/product/hp-elitedesk-800-35w-g2-desktop-mini-pc/7633266
+# http://10.10.10.222:16992
+# NB this machine has an UEFI firmware and as such we have to send it an efi
+#    application.
+# NB this machine UEFI firmware does not seem to support UEFI HTTP Boot as
+#    described at https://ipxe.org/appnote/uefihttp, so we have to use the
+#    traditional TFTP to download ipxe.
+host g2-mini {
+  hardware ethernet ec:b1:d7:71:ff:f3;
+  fixed-address $network_address_prefix.222;
+  filename "ipxe/ipxe.efi";
 }
 
 # run dhcp-event when a lease changes state.

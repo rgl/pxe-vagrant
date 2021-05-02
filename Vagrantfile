@@ -6,7 +6,29 @@ ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 # NB this must be a /24 prefixed network.
 $network_address_prefix = '10.10.10'
 
+# configure the virtual machines network to use an already configured bridge.
+# NB this is used for connecting to the external world (alike the one
+#    described at https://github.com/rgl/pxe-raspberrypi-vagrant).
+# NB set to nil to for using private networking.
+$public_bridge_name = nil
+#$public_bridge_name = 'br-rpi'
+
 require 'fileutils'
+
+def config_pxe_client_network(config, mac)
+  if $public_bridge_name
+    config.vm.network :public_network,
+      dev: $public_bridge_name,
+      mac: mac,
+      ip: "#{$network_address_prefix}.0",
+      auto_config: false
+  else
+    config.vm.network :private_network,
+      mac: mac,
+      ip: "#{$network_address_prefix}.0",
+      auto_config: false
+  end
+end
 
 Vagrant.configure('2') do |config|
   config.vm.box = 'ubuntu-20.04-amd64'
@@ -29,7 +51,18 @@ Vagrant.configure('2') do |config|
 
   config.vm.define :gateway do |config|
     config.vm.hostname = 'gateway'
-    config.vm.network :private_network, ip: "#{$network_address_prefix}.2", libvirt__dhcp_enabled: false, libvirt__forward_mode: 'none'
+    if $public_bridge_name
+      config.vm.network :public_network,
+        dev: $public_bridge_name,
+        mac: '080027000000',
+        ip: "#{$network_address_prefix}.2"
+    else
+      config.vm.network :private_network,
+        mac: '080027000000',
+        ip: "#{$network_address_prefix}.2",
+        libvirt__dhcp_enabled: false,
+        libvirt__forward_mode: 'none'
+    end
     config.vm.provider :libvirt do |lv, config|
       lv.memory = 512
     end
@@ -56,7 +89,7 @@ Vagrant.configure('2') do |config|
 
   config.vm.define :debian_live do |config|
     config.vm.box = 'empty'
-    config.vm.network :private_network, mac: '080027000001', ip: "#{$network_address_prefix}.0", auto_config: false
+    config_pxe_client_network(config, '080027000001')
     config.vm.provider :libvirt do |lv, config|
       lv.memory = 2048
       lv.boot 'network'
@@ -175,7 +208,7 @@ Vagrant.configure('2') do |config|
     config.vm.box = 'empty'
     config.ssh.username = 'root'
     config.ssh.shell = '/bin/sh'
-    config.vm.network :private_network, mac: '080027000002', ip: "#{$network_address_prefix}.0", auto_config: false
+    config_pxe_client_network(config, '080027000002')
     config.vm.provider :libvirt do |lv, config|
       lv.memory = 2048
       lv.boot 'network'
@@ -267,7 +300,7 @@ Vagrant.configure('2') do |config|
 
   config.vm.define :tcl do |config|
     config.vm.box = 'empty'
-    config.vm.network :private_network, mac: '080027000003', ip: "#{$network_address_prefix}.0", auto_config: false
+    config_pxe_client_network(config, '080027000003')
     config.ssh.insert_key = false
     config.ssh.shell = '/bin/sh' # TCL uses BusyBox ash instead of bash.
     config.vm.provider :libvirt do |lv, config|
@@ -382,7 +415,7 @@ Vagrant.configure('2') do |config|
 
   config.vm.define :winpe do |config|
     config.vm.box = 'empty'
-    config.vm.network :private_network, mac: '080027000004', ip: "#{$network_address_prefix}.0", auto_config: false
+    config_pxe_client_network(config, '080027000004')
     config.vm.provider :libvirt do |lv, config|
       lv.memory = 2048
       lv.boot 'network'
