@@ -5,12 +5,13 @@ ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 # the network prefix we use in this environment.
 # NB this must be a /24 prefixed network.
 $network_address_prefix = '10.10.10'
+$public_bridge_name = nil
 
 # configure the virtual machines network to use an already configured bridge.
 # NB this is used for connecting to the external world (alike the one
 #    described at https://github.com/rgl/pxe-raspberrypi-vagrant).
 # NB set to nil to for using private networking.
-$public_bridge_name = nil
+#$network_address_prefix = '10.3.0'
 #$public_bridge_name = 'br-rpi'
 
 require 'fileutils'
@@ -19,6 +20,8 @@ def config_pxe_client_network(config, mac)
   if $public_bridge_name
     config.vm.network :public_network,
       dev: $public_bridge_name,
+      mode: 'bridge',
+      type: 'bridge',
       mac: mac,
       ip: "#{$network_address_prefix}.0",
       auto_config: false
@@ -54,6 +57,8 @@ Vagrant.configure('2') do |config|
     if $public_bridge_name
       config.vm.network :public_network,
         dev: $public_bridge_name,
+        mode: 'bridge',
+        type: 'bridge',
         mac: '080027000000',
         ip: "#{$network_address_prefix}.2"
     else
