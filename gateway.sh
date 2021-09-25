@@ -101,6 +101,7 @@ sbverify --verbose --cert $HOME/MicCorUEFCA2011_2011-06-27-crt.pem $HOME/wimboot
 # get Debian Live (assumed to be built from https://github.com/rgl/debian-live-builder-vagrant).
 
 if [ -f /vagrant/tmp/live-image-amd64.hybrid.iso ]; then
+rm -rf /srv/tftp/debian-live
 mkdir -p /srv/tftp/debian-live/pxelinux.cfg
 pushd /srv/tftp/debian-live
 # configure pxelinux to boot debian-live.
@@ -150,6 +151,7 @@ fi
 # get LinuxKit (assumed to be built from https://github.com/rgl/linuxkit-vagrant).
 
 if [ -f /vagrant/tmp/sshd-kernel ]; then
+rm -rf /srv/tftp/linuxkit
 mkdir -p /srv/tftp/linuxkit/pxelinux.cfg
 pushd /srv/tftp/linuxkit
 cp $HOME/$SYSLINUX/bios/com32/elflink/ldlinux/ldlinux.c32 .
@@ -174,6 +176,7 @@ fi
 apt-get install -y --no-install-recommends advancecomp
 apt-get install -y --no-install-recommends squashfs-tools
 
+rm -rf /srv/tftp/tcl
 mkdir /srv/tftp/tcl && pushd /srv/tftp/tcl
 TCL_REPOSITORY=http://tinycorelinux.net/12.x/x86_64
 # corepure64.gz contains all the files on rootfs64 and modules64 merged together in a single smaller file.
@@ -234,6 +237,7 @@ popd
 # see http://www.syslinux.org/wiki/index.php?title=Linux.c32
 
 if [ -f /vagrant/tmp/winpe-amd64.iso ]; then
+rm -rf /srv/tftp/winpe
 mkdir -p /srv/tftp/winpe/pxelinux.cfg
 pushd /srv/tftp/winpe
 cp $HOME/$SYSLINUX/bios/com32/elflink/ldlinux/ldlinux.c32 .
