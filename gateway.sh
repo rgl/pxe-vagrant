@@ -39,6 +39,12 @@ EOF
 
 
 #
+# install 7zip.
+
+apt-get install -y --no-install-recommends p7zip-full
+
+
+#
 # provision the TFTP server.
 # see https://help.ubuntu.com/community/Installation/QuickNetboot
 # see https://help.ubuntu.com/community/PXEInstallServer
@@ -118,7 +124,6 @@ initrd initrd.img
 # boot from an http downloaded filesystem.squashfs:
 append net.ifnames=0 boot=live live-netdev=eth1 ethdevice-timeout=60 fetch=http://$network_address_prefix.2/debian-live/filesystem.squashfs components username=vagrant
 EOF
-apt-get install -y --no-install-recommends p7zip-full
 # make linux, initrd and the root filesystem available from tftp and http.
 7z x -otmp /vagrant/tmp/live-image-amd64.hybrid.iso live/{vmlinuz,initrd.img,filesystem.squashfs}
 mv tmp/live/* .
