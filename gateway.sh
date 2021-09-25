@@ -70,7 +70,7 @@ tar xf $HOME/$SYSLINUX.tar.xz -C $HOME
 #
 # get ipxe.
 
-apt-get install -y git-core build-essential
+apt-get install -y git build-essential
 bash /vagrant/build-ipxe.sh
 mkdir -p /srv/tftp/ipxe
 cp $HOME/ipxe/src/bin-x86_64-efi/ipxe.efi /srv/tftp/ipxe
