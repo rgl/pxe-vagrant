@@ -80,8 +80,8 @@ cp $HOME/ipxe/src/bin-x86_64-efi/ipxe.efi /srv/tftp/ipxe
 # get wimboot.
 # see http://ipxe.org/wimboot
 
-WIMBOOT_URL=https://github.com/ipxe/wimboot/releases/download/v2.7.2/wimboot
-WIMBOOT_SHA=5115831f27a487ef7d7671235c1d015122a92a1187681ee10de92574d54058db
+WIMBOOT_URL=https://github.com/ipxe/wimboot/releases/download/v2.7.3/wimboot
+WIMBOOT_SHA=2133ada911bcdfa95a450a702ca24b949671cac1a8e4e3192d026c1483920973
 wget -q -P $HOME $WIMBOOT_URL
 if [ "$(sha256sum $HOME/wimboot | awk '{print $1}')" != "$WIMBOOT_SHA" ]; then
     echo "downloaded $WIMBOOT_URL failed the checksum verification"
