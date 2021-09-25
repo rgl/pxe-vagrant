@@ -456,6 +456,11 @@ Vagrant.configure('2') do |config|
         lv.qemuargs :value => value
       end
       lv.mgmt_attach = false
+      lv.graphics_type = 'spice'
+      lv.video_type = 'qxl'
+      lv.input :type => 'tablet', :bus => 'usb'
+      lv.channel :type => 'unix', :target_name => 'org.qemu.guest_agent.0', :target_type => 'virtio'
+      lv.channel :type => 'spicevmc', :target_name => 'com.redhat.spice.0', :target_type => 'virtio'
       config.vm.box = nil
     end
     config.vm.provider :virtualbox do |vb, config|
