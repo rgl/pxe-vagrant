@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euxo pipefail
 
+# install dependencies.
+apt-get install -y liblzma-dev
+
 # clone the ipxe repo.
 cd ~
 [ -d ipxe ] || git clone https://github.com/ipxe/ipxe.git ipxe
@@ -52,4 +55,13 @@ NUM_CPUS=$((`getconf _NPROCESSORS_ONLN` + 2))
 #    src/config/local/*.h they will not always work unless we
 #    build from scratch.
 rm -rf src/bin*
-time make -j $NUM_CPUS -C src bin-x86_64-efi/ipxe.efi EMBED=/vagrant/boot.ipxe
+# NB if you are having trouble running iPXE you can make a DEBUG build with,
+#    e.g.:
+#       make ... DEBUG=init
+#    see iPXE initialising devices... loop at
+#        https://lists.ipxe.org/pipermail/ipxe-devel/2021-June/007464.html
+time make -j $NUM_CPUS -C src \
+    bin/undionly.kpxe \
+    bin-x86_64-efi/ipxe.efi \
+    EMBED=/vagrant/boot.ipxe \
+    DEBUG=init

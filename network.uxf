@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<diagram program="umlet" version="14.2">
+<diagram program="umlet" version="14.3.0">
   <zoom_level>10</zoom_level>
   <element>
     <id>UMLClass</id>
@@ -105,11 +105,12 @@ m1=eth0</panel_attributes>
       <x>770</x>
       <y>150</y>
       <w>60</w>
-      <h>80</h>
+      <h>90</h>
     </coordinates>
     <panel_attributes>DHCP
 TFTP
 HTTP
+SMB
 NAT
 bg=blue</panel_attributes>
     <additional_attributes/>
@@ -118,12 +119,12 @@ bg=blue</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>790</x>
-      <y>220</y>
+      <y>230</y>
       <w>30</w>
-      <h>60</h>
+      <h>50</h>
     </coordinates>
     <panel_attributes>lt=.</panel_attributes>
-    <additional_attributes>10.0;40.0;10.0;10.0</additional_attributes>
+    <additional_attributes>10.0;30.0;10.0;10.0</additional_attributes>
   </element>
   <element>
     <id>UMLUseCase</id>

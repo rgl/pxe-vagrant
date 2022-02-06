@@ -3,6 +3,10 @@ set -eux
 
 network_address_prefix="${1:-10.10.10}"; shift || true
 
+# set the winpe mac address.
+# NB this is also hardcoded in the Vagrantfile.
+winpe_host_mac='08:00:27:00:00:04'
+
 # set which os will be booted in the g2-mini host.
 g2_mini_host_os='debian-live'
 #g2_mini_host_os='winpe'
@@ -73,6 +77,7 @@ tar xf $HOME/$SYSLINUX.tar.xz -C $HOME
 apt-get install -y git build-essential
 bash /vagrant/build-ipxe.sh
 mkdir -p /srv/tftp/ipxe
+cp $HOME/ipxe/src/bin/undionly.kpxe /srv/tftp/ipxe
 cp $HOME/ipxe/src/bin-x86_64-efi/ipxe.efi /srv/tftp/ipxe
 
 
@@ -238,25 +243,33 @@ popd
 
 if [ -f /vagrant/tmp/winpe-amd64.iso ]; then
 rm -rf /srv/tftp/winpe
-mkdir -p /srv/tftp/winpe/pxelinux.cfg
+mkdir -p /srv/tftp/winpe
 pushd /srv/tftp/winpe
-cp $HOME/$SYSLINUX/bios/com32/elflink/ldlinux/ldlinux.c32 .
-cp $HOME/$SYSLINUX/bios/com32/modules/linux.c32 .
-cp $HOME/$SYSLINUX/bios/com32/lib/libcom32.c32 .
-cp $HOME/$SYSLINUX/bios/core/lpxelinux.0 .
 cp $HOME/wimboot .
+cp /vagrant/windows-server-2022/* .
+sed -i -E "s,(artifactsRemoteHost =).+,\1 '$network_address_prefix.2'," startup.ps1
 7z x -otmp /vagrant/tmp/winpe-amd64.iso Boot/{BCD,boot.sdi} sources/boot.wim
 find tmp -type f -exec mv {} $PWD \;
 rm -rf tmp
-cat >pxelinux.cfg/default <<'EOF'
-default winpe
-label winpe
-com32 linux.c32
-append wimboot initrdfile=BCD,boot.sdi,boot.wim
+popd
+fi
+
+# configure the winpe host to boot winpe.
+pushd /srv/tftp/ipxe
+mkdir -p $winpe_host_mac && cd $winpe_host_mac
+cat >boot.ipxe <<'EOF'
+#!ipxe
+set winpe http://${next-server}/winpe
+initrd ${winpe}/startup.ps1 startup.ps1
+initrd ${winpe}/winpeshl.ini winpeshl.ini
+initrd ${winpe}/unattend-bios.xml unattend-bios.xml
+initrd ${winpe}/unattend-uefi.xml unattend-uefi.xml
+initrd ${winpe}/BCD BCD
+initrd ${winpe}/boot.sdi boot.sdi
+initrd ${winpe}/boot.wim boot.wim
+chain --autofree --replace ${winpe}/wimboot
 EOF
 popd
-# test with: atftp --get --local-file lpxelinux.0 --remote-file winpe/lpxelinux.0 127.0.0.1
-fi
 
 # configure the g2-mini host to boot winpe.
 if [ "$g2_mini_host_os" == 'winpe' ]; then
@@ -264,14 +277,94 @@ pushd /srv/tftp/ipxe
 mkdir -p $g2_mini_host_mac && cd $g2_mini_host_mac
 cat >boot.ipxe <<'EOF'
 #!ipxe
-set base_url http://${next-server}/winpe
-initrd ${base_url}/BCD
-initrd ${base_url}/boot.sdi
-initrd ${base_url}/boot.wim
-chain --autofree --replace ${base_url}/wimboot
+set winpe http://${next-server}/winpe
+initrd ${winpe}/startup.ps1 startup.ps1
+initrd ${winpe}/winpeshl.ini winpeshl.ini
+initrd ${winpe}/unattend-bios.xml unattend-bios.xml
+initrd ${winpe}/unattend-uefi.xml unattend-uefi.xml
+initrd ${winpe}/BCD BCD
+initrd ${winpe}/boot.sdi boot.sdi
+initrd ${winpe}/boot.wim boot.wim
+chain --autofree --replace ${winpe}/wimboot
 EOF
 popd
 fi
+
+
+#
+# get windows server 2022.
+# see https://ipxe.org/howto/winpe
+# see https://github.com/ipxe/wimboot
+# see https://github.com/rgl/windows-vagrant
+# see https://github.com/rgl/windows-pe-vagrant
+
+windows_iso_url='https://software-download.microsoft.com/download/sg/20348.169.210806-2348.fe_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso'
+windows_iso_path="/vagrant/tmp/$(basename "$windows_iso_url")"
+if [ ! -f "$windows_iso_path" ]; then
+  windows_iso_tmp_path="$windows_iso_path.tmp"
+  rm -f "$windows_iso_tmp_path"
+  wget -q -O "$windows_iso_tmp_path" "$windows_iso_url"
+  mv "$windows_iso_tmp_path" "$windows_iso_path"
+fi
+mkdir -p /srv/tftp/windows-server-2022.iso
+cat >>/etc/fstab <<EOF
+$windows_iso_path /srv/tftp/windows-server-2022.iso udf ro 0 0
+EOF
+mount -a
+
+# get the windows server 2022 kvm virtio drivers.
+# see https://docs.fedoraproject.org/en-US/quick-docs/creating-windows-virtual-machines-using-virtio-drivers/index.html
+virtio_iso_url='https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.190-1/virtio-win-0.1.190.iso'
+virtio_iso_path="/vagrant/tmp/$(basename "$virtio_iso_url")"
+if [ ! -f "$virtio_iso_path" ]; then
+  virtio_iso_tmp_path="$virtio_iso_path.tmp"
+  rm -f "$virtio_iso_tmp_path"
+  wget -q -O "$virtio_iso_tmp_path" "$virtio_iso_url"
+  mv "$virtio_iso_tmp_path" "$virtio_iso_path"
+fi
+mkdir -p /srv/tftp/virtio.iso
+cat >>/etc/fstab <<EOF
+$virtio_iso_path /srv/tftp/virtio.iso iso9660 ro 0 0
+EOF
+mount -a
+mkdir -p /srv/tftp/virtio-w10-amd64
+cp \
+  /srv/tftp/virtio.iso/*/w10/amd64/* \
+  /srv/tftp/virtio-w10-amd64
+
+
+#
+# provision the SMB server.
+# NB samba users/passwords are stored in /var/lib/samba/private/passdb.tdb
+#    NB a corresponding OS user (or mapping) must exist to validate FS access.
+
+apt-get install -y --no-install-recommends samba smbclient
+mv /etc/samba/smb.conf /etc/samba/smb.conf.old
+cat >/etc/samba/smb.conf <<'EOF'
+[global]
+workgroup = WORKGROUP
+server string = %h server (Samba, Ubuntu)
+server role = standalone server
+acl allow execute always = yes
+
+[artifacts]
+comment = Network Boot Artifacts
+read only = yes
+guest ok = yes
+browseable = yes
+path = /srv/tftp
+EOF
+testparm --suppress-prompt
+systemctl restart smbd
+samba --version
+smbclient --version
+smbclient --no-pass --list localhost
+smbclient --no-pass //localhost/artifacts --command ls
+smbpasswd -a -s vagrant <<'EOF'
+vagrant
+vagrant
+EOF
+smbcacls //localhost/artifacts / -U vagrant%vagrant #--numeric
 
 
 #
@@ -343,8 +436,7 @@ host tcl {
 host winpe {
   hardware ethernet 08:00:27:00:00:04;
   fixed-address $network_address_prefix.104;
-  option pxelinux.pathprefix "http://$network_address_prefix.2/winpe/";
-  filename "winpe/lpxelinux.0";
+  filename "ipxe/undionly.kpxe";
 }
 
 # This host is my physical HP EliteDesk 800 35W G2 Desktop Mini.

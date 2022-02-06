@@ -422,8 +422,10 @@ Vagrant.configure('2') do |config|
     config.vm.box = 'empty'
     config_pxe_client_network(config, '080027000004')
     config.vm.provider :libvirt do |lv, config|
-      lv.memory = 2048
+      lv.memory = 4*1024
+      lv.boot 'hd'
       lv.boot 'network'
+      lv.storage :file, :size => '40G'
       # set some BIOS settings that will help us identify this particular machine.
       #
       #   QEMU                | Linux

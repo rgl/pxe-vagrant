@@ -18,6 +18,8 @@ Run `vagrant up tcl --no-destroy-on-error` to launch the `tcl` (Tiny Core Linux)
 
 Run `vagrant up winpe --no-destroy-on-error` to launch the `winpe` (Windows PE) PXE client. This assumes you have `../windows-pe-vagrant/tmp/winpe-amd64.iso` built as described at the [rgl/windows-pe-vagrant](https://github.com/rgl/windows-pe-vagrant) repository. Note that vagrant wont be able to connect to it; the idea is just to see it PXE boot.
 
+The `winpe` (Windows PE) PXE client can also install Windows from a SMB network share into the local disk, as described at the end of the [windows-server-2022/startup.ps1](windows-server-2022/startup.ps1) file.
+
 # PXE boot
 
 This is roughly how Debian Live Linux is booted on a PXE PC:
