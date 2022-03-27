@@ -314,7 +314,7 @@ mount -a
 
 # get the windows server 2022 kvm virtio drivers.
 # see https://docs.fedoraproject.org/en-US/quick-docs/creating-windows-virtual-machines-using-virtio-drivers/index.html
-virtio_iso_url='https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.190-1/virtio-win-0.1.190.iso'
+virtio_iso_url='https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.215-2/virtio-win-0.1.215.iso'
 virtio_iso_path="/vagrant/tmp/$(basename "$virtio_iso_url")"
 if [ ! -f "$virtio_iso_path" ]; then
   virtio_iso_tmp_path="$virtio_iso_path.tmp"
@@ -327,10 +327,10 @@ cat >>/etc/fstab <<EOF
 $virtio_iso_path /srv/tftp/virtio.iso iso9660 ro 0 0
 EOF
 mount -a
-mkdir -p /srv/tftp/virtio-w10-amd64
+mkdir -p /srv/tftp/virtio-2k22-amd64
 cp \
-  /srv/tftp/virtio.iso/*/w10/amd64/* \
-  /srv/tftp/virtio-w10-amd64
+  /srv/tftp/virtio.iso/*/2k22/amd64/* \
+  /srv/tftp/virtio-2k22-amd64
 
 
 #
